@@ -1,0 +1,33 @@
+{
+  "type": "record",
+  "namespace": "org.fretron.user.manager.model",
+  "name": "User",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "age",
+      "type": "int"
+    },
+    {
+      "name": "address",
+      "type": "string",
+      "default": "null"
+    },
+    {
+      "name": "currentWealth",
+      "type": "double",
+      "default": 0.0
+    },
+    {
+      "name": "lastUpdate",
+      "type": {
+        "type": "long",
+        "logicalType": "utc-to-epoch-millis"
+      },
+      "default": 0
+    }
+  ]
+}
