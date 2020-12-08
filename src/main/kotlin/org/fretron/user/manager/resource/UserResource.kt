@@ -14,9 +14,6 @@ class UserResource @Inject constructor(
     @Named("objectMapper") private val objectMapper: ObjectMapper,
     @Named("userService") private val userService: UserServiceImpl
 ) {
-    init {
-        print("Resource Init")
-    }
 
     @GET
     @Path("/status")
@@ -58,7 +55,6 @@ class UserResource @Inject constructor(
     @Consumes(MediaType.APPLICATION_JSON)
     fun updateUser(@QueryParam("id") id: String, user: String): Response {
         val person = objectMapper.readValue(user, User::class.java)
-        println("Update Person :: $id && Person $person")
         return if (person != null) {
             if (userService.updateUser(id, person)) Response.ok("User Updated!!").build()
             else Response.status(Response.Status.INTERNAL_SERVER_ERROR).build()

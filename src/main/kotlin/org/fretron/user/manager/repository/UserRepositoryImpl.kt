@@ -3,6 +3,7 @@ package org.fretron.user.manager.repository
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.BasicDBObject
 import com.mongodb.MongoClient
+import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters
 import com.mongodb.util.JSON
@@ -17,10 +18,6 @@ import kotlin.collections.ArrayList
 class UserRepositoryImpl @Inject constructor(@Named("objectMapper") private var objectMapper: ObjectMapper) :
     UserRepository {
 
-    init {
-        println("Repo Init")
-    }
-
     var mongoClient: MongoClient? = null
     var mongoDatabase: MongoDatabase? = null
 
@@ -29,7 +26,12 @@ class UserRepositoryImpl @Inject constructor(@Named("objectMapper") private var 
         mongoDatabase = mongoClient?.getDatabase("userDB")
     }
 
+    private fun String.getCollection(): MongoCollection<Document>? {
+        return mongoDatabase?.getCollection(this)
+    }
+
     private fun closeConnection() {
+        mongoDatabase = null
         mongoClient?.close()
     }
 
@@ -39,12 +41,11 @@ class UserRepositoryImpl @Inject constructor(@Named("objectMapper") private var 
 
     override fun addUser(user: User): Boolean {
         createConnection()
-        val collection = mongoDatabase?.getCollection("user")
+        val collection = "user".getCollection()
         val personToAdd = objectMapper.readValue(user.toString(), User::class.java)
         return if (personToAdd != null) {
             val document = Document.parse(personToAdd.toString())
             document["_id"] = generateUserId().toString()
-            println("Add User :: $document")
             collection?.insertOne(document)
             closeConnection()
             true
@@ -53,30 +54,27 @@ class UserRepositoryImpl @Inject constructor(@Named("objectMapper") private var 
 
     override fun deleteUser(id: String): Boolean {
         createConnection()
-        val collection = mongoDatabase?.getCollection("user")
-        println("Delete User With ID :: $id ")
+        val collection = "user".getCollection()
         val mongoCollection = collection?.deleteOne(Filters.eq("_id", id))
-        if (mongoCollection != null) println("Delete :: ${mongoCollection.deletedCount}")
         closeConnection()
-        return true
+        return mongoCollection?.deletedCount == "1".toLong()
     }
 
     override fun updateUser(id: String, user: User): Boolean {
         createConnection()
-        val collection = mongoDatabase?.getCollection("user")
+        val collection = "user".getCollection()
         val query = BasicDBObject()
         query["_id"] = id
         val personDocument = Document.parse(user.toString())
         val update: Bson = Document("\$set", personDocument)
         val mongoCollection = collection?.findOneAndUpdate(query, update)
-        println("Updated User :: $mongoCollection")
         closeConnection()
-        return true
+        return mongoCollection!=null
     }
 
     override fun getUser(id: String): User? {
         createConnection()
-        val collection = mongoDatabase?.getCollection("user")
+        val collection = "user".getCollection()
         var person: User? = null
         val query = BasicDBObject()
         query["_id"] = id
@@ -88,7 +86,6 @@ class UserRepositoryImpl @Inject constructor(@Named("objectMapper") private var 
                 person = objectMapper.readValue(json, User::class.java)
             }
         }
-        println("Get Users With ID :: $id \n $person")
         closeConnection()
         return person
     }
@@ -96,7 +93,7 @@ class UserRepositoryImpl @Inject constructor(@Named("objectMapper") private var 
     override fun getAllUsers(): ArrayList<User> {
         val allUsers: ArrayList<User> = ArrayList()
         createConnection()
-        val collection = mongoDatabase?.getCollection("user")
+        val collection = "user".getCollection()
         collection!!.find().iterator().use { cur ->
             while (cur.hasNext()) {
                 val doc = cur.next()
@@ -106,7 +103,6 @@ class UserRepositoryImpl @Inject constructor(@Named("objectMapper") private var 
                 allUsers.add(person)
             }
         }
-        println("Get All Users \n $allUsers")
         closeConnection()
         return allUsers
     }

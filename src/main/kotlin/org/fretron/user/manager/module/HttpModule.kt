@@ -11,6 +11,7 @@ import javax.ws.rs.core.UriBuilder
 
 @Module
 class HttpModule {
+
     @Provides
     fun provideResource(userResource: UserResource): ResourceConfig {
         return ResourceConfig().register(userResource)
