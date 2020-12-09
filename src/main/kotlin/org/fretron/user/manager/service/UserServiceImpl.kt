@@ -7,10 +7,6 @@ import javax.inject.Named
 
 class UserServiceImpl @Inject constructor(@Named("userRepository") private val userRepository: UserRepository) {
 
-    init {
-        println("Service Init")
-    }
-
     fun addUser(user: User): Boolean {
 
         return userRepository.addUser(user)
